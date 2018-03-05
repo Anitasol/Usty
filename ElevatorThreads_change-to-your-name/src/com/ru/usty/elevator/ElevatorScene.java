@@ -14,15 +14,22 @@ import java.util.concurrent.Semaphore;
 public class ElevatorScene {
 
 	//The semaphore place
-	public static Semaphore semaphore1;
+	public static Semaphore[][] semaphoreIn;
+	public static Semaphore[][] semaphoreOut;
 	
+	public static Semaphore floorCountMutex;
 	public static Semaphore personCountMutex;
-	
-	public static Semaphore elevatorWaitMutex;
+	public static Semaphore exitedCountMutex;
+	public static Semaphore elevatorCountMutex; //counting people in elevator
 	
 	public static ElevatorScene scene;
 	
-	public static boolean elevatorsMayDie;
+	public static boolean elevatorsMayDie; 
+	public int whichElevator = 0;
+	
+	public static int maxElevatorSpace = 6;
+	public static int currentPeopleInElev = 0;
+	public static int countingFloors = 0; 
 	
 	//TO SPEED THINGS UP WHEN TESTING,
 	//feel free to change this.  It will be changed during grading
@@ -38,14 +45,13 @@ public class ElevatorScene {
 									//implement differently
 									//if it suits you
 	ArrayList<Integer> exitedCount = null;
-	public static Semaphore exitedCountMutex;
+	
 
 	//Base function: definition must not change
 	//Necessary to add your code in this one
 	public void restartScene(int numberOfFloors, int numberOfElevators) {
 		
-		elevatorsMayDie = true;
-		
+		//elevatorsMayDie = true;
 		if(elevatorThread != null) {
 			if(elevatorThread.isAlive()) {
 				
@@ -57,31 +63,47 @@ public class ElevatorScene {
 				}
 			}
 		}
-		
-		elevatorsMayDie = false;
+		//elevatorsMayDie = false;
 		
 		scene = this;
-		semaphore1 = new Semaphore(0);
-		personCountMutex = new Semaphore(1);
-		elevatorWaitMutex = new Semaphore(1);
 		
-		elevatorThread = new Thread(new Runnable() {
+		semaphoreIn = new Semaphore[numberOfElevators][numberOfFloors];
+		semaphoreOut = new Semaphore[numberOfElevators][numberOfFloors];
+		
+		for(int i = 0; i < numberOfElevators; i++) {
+			for(int j = 0; j < numberOfFloors; j++) {
+			semaphoreIn[i][j] = new Semaphore(0);
+			}
+			//semaphoreOut[i] = new Semaphore(0);
+		}
+		for(int i = 0; i < numberOfElevators; i++) {
+			for(int j = 0; j < numberOfFloors; j++) {
+				semaphoreOut[i][j] = new Semaphore(0);
+			}
+		}
+		
+		floorCountMutex = new Semaphore(1);
+		personCountMutex = new Semaphore(1);
+		
+		//elevatorThread = new Thread(new Runnable() {
 
-			@Override
-			public void run() {
+			//@Override
+			/*public void run() {
 				while(true) {
+					
 					if(ElevatorScene.elevatorsMayDie) {
+	
 						return;
 					}
 					
-					for(int i = 0; i < 16; i++) {
-						ElevatorScene.semaphore1.release(); //signal
+					for(int i = 0; i < maxElevatorSpace; i++) {
+						ElevatorScene.semaphoreIn[i].release(); //signal
 					}
 				}
 			}
 			
 		});
-		elevatorThread.start();
+		elevatorThread.start();*/
 		
 		/**
 		 * Important to add code here to make new
@@ -93,6 +115,10 @@ public class ElevatorScene {
 		 * If you can, tell any currently running
 		 * elevator threads to stop
 		 */
+		for (int i = 0 ; i < numberOfElevators; i++) {
+			elevatorThread = new Thread(new Elevator(i));
+			elevatorThread.start();
+		}
 
 		this.numberOfFloors = numberOfFloors;
 		this.numberOfElevators = numberOfElevators;
@@ -130,7 +156,7 @@ public class ElevatorScene {
 		 * (you don't have to join() yourself)
 		 */
 
-		incrementNumberOfPeopleWaitingAtFloor(sourceFloor); 
+		 
 			
 		return thread;  //this means that the testSuite will not wait for the threads to finish
 	}
@@ -139,18 +165,43 @@ public class ElevatorScene {
 	public int getCurrentFloorForElevator(int elevator) {
 
 		//dumb code, replace it!
-		return 1;
+		return countingFloors;
+	}
+	
+	public void decrementNumberOfPeopleInElev(int elevator) {
+		try {
+			ElevatorScene.floorCountMutex.acquire();
+				currentPeopleInElev--;
+			ElevatorScene.floorCountMutex.release();  //signal
+			
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+			
+	}
+	
+	public void incrementNumberOfPeopleInElev(int elevator) {
+		try {
+			ElevatorScene.floorCountMutex.acquire();
+				currentPeopleInElev++;
+			ElevatorScene.floorCountMutex.release();  //signal
+			
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+			
 	}
 
 	//Base function: definition must not change, but add your code
 	public int getNumberOfPeopleInElevator(int elevator) {
 		
+		
 		//dumb code, replace it!
-		switch(elevator) {
-		case 1: return 1;
-		case 2: return 4;
-		default: return 3;
-		}
+		 return currentPeopleInElev;
+		
 	}
 
 	//Base function: definition must not change, but add your code

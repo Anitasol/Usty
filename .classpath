@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="src" path="ElevatorThreads_change-to-your-name/src"/>
+	<classpathentry kind="lib" path="ElevatorThreads_change-to-your-name/libs/gdx-backend-lwjgl-natives.jar"/>
+	<classpathentry kind="lib" path="ElevatorThreads_change-to-your-name/libs/gdx-backend-lwjgl.jar"/>
+	<classpathentry kind="lib" path="ElevatorThreads_change-to-your-name/libs/gdx-natives.jar"/>
+	<classpathentry kind="lib" path="ElevatorThreads_change-to-your-name/libs/gdx.jar"/>
+	<classpathentry kind="output" path="ElevatorThreads_change-to-your-name/bin"/>
+</classpath>
